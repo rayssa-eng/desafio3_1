@@ -37,8 +37,11 @@ function listAllMethods(obj) {
     return Array.from(methods);
 }
 
+// repositorioCadastro.salva(paciente);
+
 console.log('Instance methods:', listAllMethods(paciente));
 console.log('Instance methods:', listAllMethods(consulta));
+console.log(await repositorioCadastro.buscaPorCPF("15765222706"));
 
 
 // Executar o comando abaixo somente na primeira vez para criar 

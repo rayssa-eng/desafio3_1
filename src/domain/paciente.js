@@ -11,9 +11,8 @@ export class Paciente extends Model {
     static async of(cpf, nome, dtNasc) {
         const errors = [];
 
-        const dtNascPaciente = DateTime.fromFormat(dtNasc, 'dd/MM/yyyy');
         const hoje = DateTime.now();
-        const idade = hoje.diff(dtNascPaciente, 'years').years;
+        const idade = hoje.diff(dtNasc, 'years').years;
 
         if (!this.validaCPF(cpf)) {
             errors.push(ErroPaciente.CPF_INVALIDO);
@@ -23,7 +22,7 @@ export class Paciente extends Model {
             errors.push(ErroPaciente.NOME_INVALIDO);
         }
 
-        if (!dtNascPaciente.isValid) {
+        if (!dtNasc.isValid) {
             errors.push(ErroPaciente.DT_NASC_INVALIDA);
         }
 

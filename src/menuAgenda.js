@@ -1,10 +1,9 @@
 import promptSync from 'prompt-sync';
 const prompt = promptSync({ sigint: true });
-import { Consulta }          from "./consulta.js";
+import Consulta          from "./domain/consulta.js";
 
 import menuPrincipal       from "./menuPrincipal.js";
-import agendaConsultorio   from "./agenda.js";
-import cadastroConsultorio from './cadastro.js';
+import repositorioCadastro from './repositorio/RepositorioCadastro.js';
 
 
 export class MenuAgenda {
