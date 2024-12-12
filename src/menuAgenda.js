@@ -2,8 +2,11 @@ import promptSync from 'prompt-sync';
 const prompt = promptSync({ sigint: true });
 import Consulta          from "./domain/consulta.js";
 
+import { DateTime } from 'luxon';
+
 import menuPrincipal       from "./menuPrincipal.js";
 import repositorioCadastro from './repositorio/RepositorioCadastro.js';
+import repositorioAgenda from './repositorio/RepositorioAgenda.js';
 
 
 export class MenuAgenda {
@@ -21,10 +24,10 @@ export class MenuAgenda {
         return opcao;
     }
 
-    handleOpcaoUsuario(opcao) {
+    async handleOpcaoUsuario(opcao) {
         switch (opcao) {
             case 1:
-                this.novaConsulta();
+                await this.novaConsulta();
                 break;
             case 2:
                 this.cancelarConsulta();
@@ -47,58 +50,77 @@ export class MenuAgenda {
                 menuPrincipal.start();
                 break;
             default:
-                // const consultas = agendaConsultorio.consultas;
-
-                // consultas.forEach(consulta => {
-                //     console.log('consulta: ', consulta);
-                //     console.log('paciente da consulta: ', consulta.paciente);
-                //     console.log('nome do paciente da consulta: ', consulta.paciente.nome);
-
-                // })
-                // console.log("Consultas: ", agendaConsultorio.consultas);
-
                 console.log('\nOpção inválida.\n');
                 console.log('----------------------------------------------------------\n');
                 this.start();
         }
+        console.log('\n');
+        this.start();
     }
 
-    novaConsulta() {
+    async novaConsulta() {
         const pacienteCPF  = prompt("CPF: ");
 
-        const paciente = cadastroConsultorio.getPacientePorCPF(pacienteCPF);
+        const paciente = await repositorioCadastro.buscaPorCPF(pacienteCPF);
 
         if (!paciente) {
             console.error("Erro: paciente não cadastrado");
             console.log('--------------------------------------------------------------\n');
 
-            // reiniciar menu da agenda
-            this.start();
+            return false;
         }
 
         console.log(`\nAgendando consulta para: ${paciente.nome}`);
 
-        const dataConsulta = prompt("Data da consulta (yyyy-MM-dd): ");
-        const horaInicio   = prompt("Hora inicial (HHmm): ");
-        const horaFim      = prompt("Hora final (HHmm): ");
-        
-        const consulta = new Consulta(
-            dataConsulta,
-            horaInicio,
-            horaFim,
-            paciente
-        );
+        const dataConsultaStr = prompt("Data da consulta (yyyy-MM-dd): ");
+        const horaInicioStr   = prompt("Hora inicial (HHmm): ");
+        const horaFimStr      = prompt("Hora final (HHmm): ");
 
-        if (agendaConsultorio.adicionarConsulta(consulta)) {
-            console.log("\nAgendamento realizado com sucesso!");
-            console.log('--------------------------------------------------------------\n');
+        // parse dos inputs
+        const dataConsulta = DateTime.fromFormat(dataConsultaStr, "yyyy-MM-dd");
+        const horaInicio   = DateTime.fromFormat(horaInicioStr, "HHmm");
+        const horaFim      = DateTime.fromFormat(horaFimStr, "HHmm");
 
-            this.start();
+        if (!dataConsulta.isValid || !horaInicio.isValid || !horaFim.isValid) {
+            throw new Error("Data ou horário fornecido é inválido.");
+        }
+
+        const dtIni = dataConsulta.set({
+            hour: horaInicio.hour,
+            minute: horaInicio.minute,
+        });
+
+        const dtFim = dataConsulta.set({
+            hour: horaFim.hour,
+            minute: horaFim.minute,
+        });
+
+        const result = await Consulta.of(dtIni, dtFim);
+
+        if (result.isSuccess) {
+            const consulta = result.data;
+            const consultaArmazenada = await repositorioAgenda.salva(consulta);
+
+            let agenda;
+
+            if (consultaArmazenada) {
+                agenda = await paciente.agenda(consulta);
+            } else {
+                console.error(`\nErro ao agendar consulta para ${paciente.nome}`);
+                return false;
+            }
+            
+            if (agenda) {
+                console.log(`\nConsulta agendada com sucesso para ${dtIni.toFormat("dd/MM/yyyy HH:mm")}, com o(a) paciente ${paciente.nome}.\n`);
+            } else {
+                console.error(`\nErro ao vincular consulta a(o) paciente ${paciente.nome}`);
+                return false;
+            }
         } else {
-            console.error("\nErro: já existe uma consulta agendada nesse horário");
-            console.log('--------------------------------------------------------------\n');
-
-            this.start();
+            console.error("Erro ao agendar consulta:");
+            result.errors.forEach((error) => console.error(`- ${error}`));
+            
+            return false;
         }
     }
 
@@ -143,9 +165,9 @@ export class MenuAgenda {
         this.start();
     }
 
-    start() {
+    async start() {
         const opcao = this.mostrarMenu();
-        this.handleOpcaoUsuario(opcao);
+        await this.handleOpcaoUsuario(opcao);
     }
 }
 

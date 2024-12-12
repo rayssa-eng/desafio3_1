@@ -1,4 +1,4 @@
-import { Model } from "sequelize";
+import { Model, Op } from "sequelize";
 import { DateTime } from 'luxon';
 
 import ErroConsulta from "./erro-consulta.js";
@@ -11,7 +11,10 @@ import Result from "./result.js";
 export class Consulta extends Model {
     static async of(dtIni, dtFim) {
         const errors = [];
-        const duracao = this.dtFim.diff(this.dtIni, 'minutes');
+        const duracao = dtFim.diff(dtIni, 'minutes');
+
+        const dtIniJS = dtIni.toJSDate();
+        const dtFimJS = dtFim.toJSDate(); 
         
         if (duracao <= 0) {
             errors.push(ErroConsulta.DT_INVALIDO);
@@ -21,19 +24,19 @@ export class Consulta extends Model {
             where: {
                 [Op.or]: [
                     {
-                        dtIni: {
-                            [Op.between]: [dtIni, dtFim]
+                        dtInicio: {
+                            [Op.between]: [dtIniJS, dtFimJS]
                         }
                     },
                     {
                         dtFim: {
-                            [Op.between]: [dtIni, dtFim]
+                            [Op.between]: [dtIniJS, dtFimJS]
                         }
                     },
                     {
                         [Op.and]: [
-                            { dtIni: { [Op.lte]: dtIni } },
-                            { dtFim: { [Op.gte]: dtFim } }
+                            { dtInicio: { [Op.lte]: dtIniJS } },
+                            { dtFim: { [Op.gte]: dtFimJS } }
                         ]
                     }
                 ]
@@ -45,7 +48,7 @@ export class Consulta extends Model {
         }
 
         return errors.length == 0
-               ? Result.success(Consulta.build({ dtIni, dtFim }))
+               ? Result.success(Consulta.build({ dtInicio: dtIniJS, dtFim: dtFimJS }))
                : Result.failure(errors);
     }
 }

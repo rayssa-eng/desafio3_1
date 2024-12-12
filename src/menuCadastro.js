@@ -76,8 +76,6 @@ export class MenuCadastro {
         const dtNascimento  = prompt("Data de nascimento (formato: DD/MM/YYYY): ");
         const dtNascimentoPaciente = DateTime.fromFormat(dtNascimento, 'dd/MM/yyyy');
 
-        console.log(dtNascimentoPaciente);
-
         const hoje = DateTime.now();
         const idade = hoje.diff(dtNascimentoPaciente, 'years').years;
 
@@ -94,10 +92,9 @@ export class MenuCadastro {
         } 
 
         const result = await Paciente.of(novoCPF, novoNome, dtNascimentoPaciente);
-        
+
         if (result.isSuccess) {
             const paciente = result.data;
-            console.log(paciente);
             // console.log(paciente.cpf, paciente.nome, paciente.dtNascimento);
             await repositorioCadastro.salva(paciente);
 
@@ -151,9 +148,9 @@ export class MenuCadastro {
         }
     }
 
-    start() {
+    async start() {
         const opcao = this.mostrarMenu();
-        this.handleOpcaoUsuario(opcao);
+        await this.handleOpcaoUsuario(opcao);
     }
 }
 

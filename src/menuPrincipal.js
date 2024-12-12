@@ -19,13 +19,13 @@ export class MenuPrincipal {
         return opcao;
     }
 
-    handleOpcaoUsuario(opcao) {
+    async handleOpcaoUsuario(opcao) {
         switch (opcao) {
             case 1:
-                menuCadastro.start()
+                await menuCadastro.start()
                 break;
             case 2:
-                menuAgenda.start();
+                await menuAgenda.start();
                 break;
             case 3:
                 console.log("Encerrando programa...");

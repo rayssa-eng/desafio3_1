@@ -35,9 +35,10 @@ export class Paciente extends Model {
             errors.push(ErroPaciente.CPF_DUPLICADO);
         }
 
-        const dtNascJS = dtNasc.toJSDate();
+        const dtNascimento = dtNasc.toJSDate();
+
         return errors.length == 0
-               ? Result.success(Paciente.build({ cpf, nome, dtNascJS }))
+               ? Result.success(Paciente.build({ cpf, nome, dtNascimento }))
                : Result.failure(errors);
     }
 

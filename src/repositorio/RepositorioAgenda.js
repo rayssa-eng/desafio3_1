@@ -12,7 +12,11 @@ class RepositorioAgenda {
      * @param {Consulta} consulta 
      */
     async salva(consulta) {
-        if (consulta !== null) await consulta.save();
+        if (consulta !== null) {
+            await consulta.save();
+            return true;
+        }
+        return false;
     }
 
     /**
