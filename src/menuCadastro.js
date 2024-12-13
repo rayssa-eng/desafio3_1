@@ -135,18 +135,30 @@ export class MenuCadastro {
         return stringLista;
     }
 
-    excluirCadastro() {
-        const exCPF       = prompt("CPF: ");
-        const exPaciente  = getPacientePorCPF(exCPF);
-
-        remocao = cadastroConsultorio.removerPaciente(exPaciente);
-
-        if (!remocao) {
+    async excluirCadastro() {
+        const exCPF = prompt("CPF: ");
+        const exPaciente = await repositorioCadastro.buscaPorCPFComConsultas(exCPF);
+    
+        if (!exPaciente) {
             console.error('Erro: paciente não cadastrado');
             console.log('--------------------------------------------------------------');
-            this.start();
+            return;
         }
+    
+        const consultas = await repositorioAgenda.buscaConsultasPorPaciente(exPaciente);
+    
+        if (consultas.length > 0) {
+            console.error('Erro: paciente possui consultas agendadas');
+            console.log('--------------------------------------------------------------');
+            return;
+        }
+    
+        await repositorioCadastro.remove(exPaciente);
+    
+        console.log('Cadastro excluído com sucesso!');
+        console.log('--------------------------------------------------------------');
     }
+    
 
     async start() {
         const opcao = this.mostrarMenu();

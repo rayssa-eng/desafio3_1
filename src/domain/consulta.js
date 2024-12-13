@@ -18,7 +18,7 @@ export class Consulta extends Model {
         
         if (duracao <= 0) {
             errors.push(ErroConsulta.DT_INVALIDO);
-        } 
+        }
 
         const conflictingConsulta = await Consulta.findOne({
             where: {

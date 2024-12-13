@@ -30,7 +30,7 @@ export class MenuAgenda {
                 await this.novaConsulta();
                 break;
             case 2:
-                this.cancelarConsulta();
+                await this.cancelarConsulta();
                 break;
             case 3:
                 const filtro = prompt("\nApresentar a agenda T-Toda ou P-Periodo: ");
@@ -124,45 +124,37 @@ export class MenuAgenda {
         }
     }
 
-    cancelarConsulta() {
+    async cancelarConsulta() {
         const pacienteCPF = prompt("CPF: ");
-        const paciente = cadastroConsultorio.getPacientePorCPF(pacienteCPF);
-
-        console.log(`\nCancelando agendamento para ${paciente.nome}`);
+        const paciente = await repositorioCadastro.buscaPorCPF(pacienteCPF);
     
         if (!paciente) {
             console.error("Erro: paciente não cadastrado");
             console.log('--------------------------------------------------------------\n');
-
-            this.start();
             return;
         }
+    
+        console.log(`\nCancelando agendamento para ${paciente.nome}`);
     
         const dataConsulta = prompt("Data da consulta (yyyy-MM-dd): ");
         const horaInicio = prompt("Hora inicial (HHmm): ");
     
-        const consultaEncontrada = agendaConsultorio
-            .getConsultasPorPaciente(paciente)
-            .find(consulta =>
-                consulta.data.toISODate() === dataConsulta &&
-                consulta.horaInicio.toFormat("HHmm") === horaInicio);
+        const consultaEncontrada = repositorioAgenda.buscaConsultaPorPacienteDataHora(
+            pacienteCPF,
+            dataConsulta,
+            horaInicio
+        );
     
         if (!consultaEncontrada) {
             console.error("Erro: agendamento não encontrado");
             console.log('--------------------------------------------------------------\n');
-
-            this.start();
             return;
         }
     
-        agendaConsultorio.removerConsulta(consultaEncontrada);
-    
-        const consultasRestantes = agendaConsultorio.getConsultasPorPaciente(paciente);
+        await repositorioAgenda.remove(consultaEncontrada);
     
         console.log("Agendamento cancelado com sucesso!");
         console.log('--------------------------------------------------------------\n');
-
-        this.start();
     }
 
     async start() {
